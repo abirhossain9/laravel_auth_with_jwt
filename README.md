@@ -1,6 +1,6 @@
 # laravel_auth_with_jwt
 
-Project setup:
+<h4>Project setup:<h4>
 
 1. Clone the repository
 2. Create an env file
