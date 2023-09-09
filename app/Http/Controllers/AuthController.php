@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
@@ -19,16 +20,20 @@ class AuthController extends Controller
         if (!$token = JWTAuth::attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized', 'success' => false, 'status' => 401], 401);
         }
+        $cookie = Cookie::make('authToken', $token, 60, null, null, true, true); // Set HTTP-only flag
 
-        return response()->json(['status' => 200, 'success' => true, 'message' => 'Login Successful', 'token' => $token]);
+        return response()
+            ->json(['status' => 200, 'success' => true, 'message' => 'Login Successful', 'token' => $token])
+            ->withCookie($cookie);
     }
 
 
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'name' => 'nullable|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
+            'password' => 'required|string|min:6',
         ]);
 
         if ($validator->fails()) {
@@ -36,6 +41,7 @@ class AuthController extends Controller
         }
 
         $user = User::create([
+            'name' => $request->input('name'),
             'email' => $request->input('email'),
             'password' => $request->input('password') //in user model type cast for password is already done so don't need to hash heres
         ]);
